@@ -1,6 +1,6 @@
 const { MongoClient } = require('mongodb');
 
-const uri = "mongodb+srv://srandhari_db_user:irbe33sv6y25Gwz3@qualityzeone.ygdfcer.mongodb.net/qualityze_admin?retryWrites=true&w=majority&appName=qualityzeOne";
+const uri = PROCESS.env.MONGODB_URI_TEST;
 
 async function testConnection() {
   console.log('🔄 Attempting connection...');
