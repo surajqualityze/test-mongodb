@@ -17,6 +17,8 @@ import {
   MessageSquare,
   BarChart3,
   ChevronRight,
+  Presentation,
+  Mic,
 } from 'lucide-react';
 
 import {
@@ -55,9 +57,16 @@ const navigation = [
       { title: 'Whitepapers', url: '/admin/whitepapers', icon: FileType },
       { title: 'Webinars', url: '/admin/webinars', icon: Video },
       { title: 'Case Studies', url: '/admin/case-studies', icon: Briefcase },
-      { title: 'Trainings', url: '/admin/trainings', icon: GraduationCap },
       { title: 'Services', url: '/admin/services', icon: Wrench },
       { title: 'Careers', url: '/admin/careers', icon: Users },
+    ],
+  },
+  {
+    title: 'Training',
+    icon: GraduationCap,
+    items: [
+      { title: 'Trainings', url: '/admin/trainings', icon: Presentation },
+      { title: 'Speakers', url: '/admin/speakers', icon: Mic },
     ],
   },
   {
