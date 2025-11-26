@@ -8,10 +8,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAllSpeakers } from '@/actions/speaker-actions';
 import { createTraining, updateTraining } from '@/actions/training-actions';
 import { Loader2, Save } from 'lucide-react';
 import type { TrainingFormData } from '@/types/training';
+import TrainingSEOFields from './TrainingSEOFields';
+import RelatedTrainingsSelector from './RelatedTrainingsSelector';
 
 interface TrainingFormProps {
   initialData?: Partial<TrainingFormData>;
@@ -155,241 +158,272 @@ export default function TrainingForm({ initialData, trainingId }: TrainingFormPr
         </div>
       )}
 
-      {/* Basic Info */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Basic Information</h3>
-        
-        <div className="space-y-2">
-          <Label htmlFor="title">Title *</Label>
-          <Input
-            id="title"
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            placeholder="Enter training title"
-            required
+      {/* Tabs */}
+      <Tabs defaultValue="content" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="content">Content</TabsTrigger>
+          <TabsTrigger value="seo">SEO</TabsTrigger>
+          <TabsTrigger value="related">Related</TabsTrigger>
+        </TabsList>
+
+        {/* Content Tab */}
+        <TabsContent value="content" className="space-y-6 mt-6">
+          {/* Basic Info */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Basic Information</h3>
+            
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                name="title"
+                value={form.title}
+                onChange={handleChange}
+                placeholder="Enter training title"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="slug">Slug *</Label>
+              <Input
+                id="slug"
+                name="slug"
+                value={form.slug}
+                onChange={handleChange}
+                placeholder="training-url-slug"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description *</Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                placeholder="Brief description of the training"
+                rows={3}
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="content">Full Content *</Label>
+              <Textarea
+                id="content"
+                name="content"
+                value={form.content}
+                onChange={handleChange}
+                placeholder="Detailed training content and learning outcomes"
+                rows={6}
+                required
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          {/* Speaker & Details */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Details</h3>
+
+            <div className="space-y-2">
+              <Label htmlFor="speakerId">Speaker *</Label>
+              <Select value={form.speakerId} onValueChange={handleSpeakerChange} disabled={loading}>
+                <SelectTrigger id="speakerId">
+                  <SelectValue placeholder="Select a speaker" />
+                </SelectTrigger>
+                <SelectContent>
+                  {speakers.map(s => (
+                    <SelectItem value={s._id} key={s._id}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duration</Label>
+                <Input
+                  id="duration"
+                  name="duration"
+                  value={form.duration}
+                  onChange={handleChange}
+                  placeholder="60 Mins"
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="level">Level</Label>
+                <Select value={form.level} onValueChange={(value: any) => setForm(f => ({ ...f, level: value }))} disabled={loading}>
+                  <SelectTrigger id="level">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="basic">Basic</SelectItem>
+                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                    <SelectItem value="advanced">Advanced</SelectItem>
+                    <SelectItem value="basic/intermediate">Basic/Intermediate</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="type">Type</Label>
+                <Select value={form.type} onValueChange={(value: any) => setForm(f => ({ ...f, type: value }))} disabled={loading}>
+                  <SelectTrigger id="type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="live">Live Webinar</SelectItem>
+                    <SelectItem value="recorded">Recorded</SelectItem>
+                    <SelectItem value="on-demand">On-Demand</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="industry">Industry *</Label>
+                <Input
+                  id="industry"
+                  name="industry"
+                  value={form.industry}
+                  onChange={handleChange}
+                  placeholder="Banking & Insurance"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="subIndustry">Sub Industry</Label>
+                <Input
+                  id="subIndustry"
+                  name="subIndustry"
+                  value={form.subIndustry}
+                  onChange={handleChange}
+                  placeholder="Optional"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tags">Tags</Label>
+              <Input
+                id="tags"
+                value={tagsInput}
+                onChange={(e) => handleTagsChange(e.target.value)}
+                placeholder="credit, analysis, banking"
+                disabled={loading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="date">Date & Time (for live trainings)</Label>
+              <Input
+                id="date"
+                name="date"
+                type="datetime-local"
+                value={form.date ? new Date(form.date).toISOString().slice(0, 16) : ''}
+                onChange={(e) => setForm(f => ({ ...f, date: e.target.value ? new Date(e.target.value) : undefined }))}
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          {/* Pricing */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Pricing</h3>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="regularPrice">Regular Price *</Label>
+                <Input
+                  id="regularPrice"
+                  name="regularPrice"
+                  type="number"
+                  value={form.regularPrice}
+                  onChange={handleChange}
+                  placeholder="189"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="discountPrice">Discount Price</Label>
+                <Input
+                  id="discountPrice"
+                  name="discountPrice"
+                  type="number"
+                  value={form.discountPrice || ''}
+                  onChange={handleChange}
+                  placeholder="Optional"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Status & Settings */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Settings</h3>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select value={form.status} onValueChange={(value: any) => setForm(f => ({ ...f, status: value }))} disabled={loading}>
+                  <SelectTrigger id="status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-8">
+                <Checkbox
+                  id="featured"
+                  checked={form.featured}
+                  onCheckedChange={(checked) => setForm(f => ({ ...f, featured: checked as boolean }))}
+                  disabled={loading}
+                />
+                <Label htmlFor="featured">Featured Training</Label>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* SEO Tab */}
+        <TabsContent value="seo" className="mt-6">
+          <TrainingSEOFields
+            seo={form.seo || {}}
+            onChange={(seo) => setForm(f => ({ ...f, seo }))}
             disabled={loading}
           />
-        </div>
+        </TabsContent>
 
-        <div className="space-y-2">
-          <Label htmlFor="slug">Slug *</Label>
-          <Input
-            id="slug"
-            name="slug"
-            value={form.slug}
-            onChange={handleChange}
-            placeholder="training-url-slug"
-            required
+        {/* Related Trainings Tab */}
+        <TabsContent value="related" className="mt-6">
+          <RelatedTrainingsSelector
+            selectedTrainings={form.relatedTrainings || []}
+            onChange={(trainings) => setForm(f => ({ ...f, relatedTrainings: trainings }))}
+            currentTrainingId={trainingId}
             disabled={loading}
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="description">Description *</Label>
-          <Textarea
-            id="description"
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            placeholder="Brief description of the training"
-            rows={3}
-            required
-            disabled={loading}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="content">Full Content *</Label>
-          <Textarea
-            id="content"
-            name="content"
-            value={form.content}
-            onChange={handleChange}
-            placeholder="Detailed training content and learning outcomes"
-            rows={6}
-            required
-            disabled={loading}
-          />
-        </div>
-      </div>
-
-      {/* Speaker & Details */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Details</h3>
-
-        <div className="space-y-2">
-          <Label htmlFor="speakerId">Speaker *</Label>
-          <Select value={form.speakerId} onValueChange={handleSpeakerChange} disabled={loading}>
-            <SelectTrigger id="speakerId">
-              <SelectValue placeholder="Select a speaker" />
-            </SelectTrigger>
-            <SelectContent>
-              {speakers.map(s => (
-                <SelectItem value={s._id} key={s._id}>{s.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor="duration">Duration</Label>
-            <Input
-              id="duration"
-              name="duration"
-              value={form.duration}
-              onChange={handleChange}
-              placeholder="60 Mins"
-              disabled={loading}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="level">Level</Label>
-            <Select value={form.level} onValueChange={(value: any) => setForm(f => ({ ...f, level: value }))} disabled={loading}>
-              <SelectTrigger id="level">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="basic">Basic</SelectItem>
-                <SelectItem value="intermediate">Intermediate</SelectItem>
-                <SelectItem value="advanced">Advanced</SelectItem>
-                <SelectItem value="basic/intermediate">Basic/Intermediate</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="type">Type</Label>
-            <Select value={form.type} onValueChange={(value: any) => setForm(f => ({ ...f, type: value }))} disabled={loading}>
-              <SelectTrigger id="type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="live">Live Webinar</SelectItem>
-                <SelectItem value="recorded">Recorded</SelectItem>
-                <SelectItem value="on-demand">On-Demand</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="industry">Industry *</Label>
-            <Input
-              id="industry"
-              name="industry"
-              value={form.industry}
-              onChange={handleChange}
-              placeholder="Banking & Insurance"
-              required
-              disabled={loading}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="subIndustry">Sub Industry</Label>
-            <Input
-              id="subIndustry"
-              name="subIndustry"
-              value={form.subIndustry}
-              onChange={handleChange}
-              placeholder="Optional"
-              disabled={loading}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="tags">Tags</Label>
-          <Input
-            id="tags"
-            value={tagsInput}
-            onChange={(e) => handleTagsChange(e.target.value)}
-            placeholder="credit, analysis, banking"
-            disabled={loading}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="date">Date & Time (for live trainings)</Label>
-          <Input
-            id="date"
-            name="date"
-            type="datetime-local"
-            value={form.date ? new Date(form.date).toISOString().slice(0, 16) : ''}
-            onChange={(e) => setForm(f => ({ ...f, date: e.target.value ? new Date(e.target.value) : undefined }))}
-            disabled={loading}
-          />
-        </div>
-      </div>
-
-      {/* Pricing */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Pricing</h3>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="regularPrice">Regular Price *</Label>
-            <Input
-              id="regularPrice"
-              name="regularPrice"
-              type="number"
-              value={form.regularPrice}
-              onChange={handleChange}
-              placeholder="189"
-              required
-              disabled={loading}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="discountPrice">Discount Price</Label>
-            <Input
-              id="discountPrice"
-              name="discountPrice"
-              type="number"
-              value={form.discountPrice || ''}
-              onChange={handleChange}
-              placeholder="Optional"
-              disabled={loading}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Status & Settings */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Settings</h3>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select value={form.status} onValueChange={(value: any) => setForm(f => ({ ...f, status: value }))} disabled={loading}>
-              <SelectTrigger id="status">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center space-x-2 pt-8">
-            <Checkbox
-              id="featured"
-              checked={form.featured}
-              onCheckedChange={(checked) => setForm(f => ({ ...f, featured: checked as boolean }))}
-              disabled={loading}
-            />
-            <Label htmlFor="featured">Featured Training</Label>
-          </div>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </form>
   );
 }

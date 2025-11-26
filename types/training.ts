@@ -70,3 +70,13 @@ export interface TrainingFormData {
   seo?: TrainingSEO;
   relatedTrainings?: string[];
 }
+
+export interface TrainingSEO {
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string[];
+  ogImage?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  canonicalUrl?: string;
+}

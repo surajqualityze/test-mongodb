@@ -31,12 +31,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Edit, MoreHorizontal, Trash2, Eye } from 'lucide-react';
+import { Edit, MoreHorizontal, Trash2, Eye, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface Speaker {
   _id: string;
   name: string;
+  photoUrl?: string;
   expertise: string;
   years: number;
   industries: string[];
@@ -80,7 +82,7 @@ export default function SpeakersDataTable({ speakers }: SpeakersDataTableProps) 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
+            <TableHead>Speaker</TableHead>
             <TableHead>Area of Expertise</TableHead>
             <TableHead>Years</TableHead>
             <TableHead>Industries</TableHead>
@@ -91,17 +93,39 @@ export default function SpeakersDataTable({ speakers }: SpeakersDataTableProps) 
           {speakers.map((speaker) => (
             <TableRow key={speaker._id}>
               <TableCell>
-                <Link
-                  href={`/admin/speakers/${speaker._id}`}
-                  className="font-medium hover:underline"
-                >
-                  {speaker.name}
-                </Link>
+                <div className="flex items-center gap-3">
+                  {/* Speaker Photo - Check for non-empty photoUrl */}
+                  {speaker.photoUrl && speaker.photoUrl.trim() !== '' ? (
+                    <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-gray-200">
+                      <Image
+                        src={speaker.photoUrl}
+                        alt={speaker.name}
+                        width={40}
+                        height={40}
+                        className="object-cover rounded-full"
+                        unoptimized={speaker.photoUrl.includes('unsplash')}
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 border border-gray-300">
+                      <User className="w-5 h-5 text-gray-400" />
+                    </div>
+                  )}
+                  
+                  {/* Speaker Name */}
+                  <Link
+                    href={`/admin/speakers/${speaker._id}`}
+                    className="font-medium hover:underline"
+                  >
+                    {speaker.name}
+                  </Link>
+                </div>
               </TableCell>
               <TableCell className="text-sm">{speaker.expertise}</TableCell>
               <TableCell className="text-sm">{speaker.years} years</TableCell>
               <TableCell className="text-sm">
-                {speaker.industries.join(', ')}
+                {speaker.industries.slice(0, 2).join(', ')}
+                {speaker.industries.length > 2 && ` +${speaker.industries.length - 2}`}
               </TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>

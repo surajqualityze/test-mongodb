@@ -7,14 +7,33 @@ import { revalidatePath } from 'next/cache';
 import type { Speaker } from '@/types/speaker';
 
 // Get all speakers (already exists, but let's make sure)
+// Get all speakers
+// Get all speakers
 export async function getAllSpeakers() {
-  const db = await getDatabase();
-  const speakers = await db.collection('speakers').find().sort({ name: 1 }).toArray();
-  return speakers.map(s => ({
-    ...s,
-    _id: s._id.toString(),
-  }));
+  try {
+    const db = await getDatabase();
+    const speakers = await db
+      .collection('speakers')
+      .find()
+      .sort({ name: 1 })
+      .toArray();
+    
+    return speakers.map(s => ({
+      _id: s._id.toString(),
+      name: s.name,
+      photoUrl: s.photoUrl,  // Make sure this is included
+      expertise: s.expertise || '',
+      years: s.years || 0,
+      industries: s.industries || [],
+      bio: s.bio || '',
+    }));
+  } catch (error) {
+    // console.error('Get all speakers error:', error);
+    return [];
+  }
 }
+
+
 
 // Get single speaker
 export async function getSpeaker(id: string) {
