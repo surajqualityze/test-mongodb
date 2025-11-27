@@ -1,8 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   FileText,
@@ -16,9 +15,12 @@ import {
   Image,
   MessageSquare,
   BarChart3,
-  ChevronRight,
   Presentation,
   Mic,
+  Download,
+  CreditCard,
+  LogOut,
+  ChevronRight,
 } from 'lucide-react';
 
 import {
@@ -41,7 +43,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import type { SessionPayload } from '@/lib/auth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import Link from 'next/link';
 
 const navigation = [
   {
@@ -70,6 +80,16 @@ const navigation = [
     ],
   },
   {
+    title: 'Downloads',
+    url: '/admin/downloads',
+    icon: Download,
+  },
+  {
+    title: 'Payments',
+    url: '/admin/payments',
+    icon: CreditCard,
+  },
+  {
     title: 'Media',
     url: '/admin/media',
     icon: Image,
@@ -91,61 +111,77 @@ const navigation = [
   },
 ];
 
-export function AppSidebar({ user }: { user: SessionPayload }) {
-  const pathname = usePathname();
+export function AppSidebar({ user }: { user?: { email: string } }) {
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = React.useState(false);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        router.push('/admin/login');
+        router.refresh();
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setLoggingOut(false);
+    }
+  }
 
   return (
     <Sidebar>
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/admin/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  Q
-                </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">Qualityze</span>
-                  <span className="text-xs">Admin Panel</span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <div className="flex items-center gap-2 px-4 py-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Settings className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold">Admin Panel</p>
+            <p className="text-xs text-muted-foreground">Management System</p>
+          </div>
+        </div>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Platform</SidebarGroupLabel>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigation.map((item) => {
+                const Icon = item.icon;
+
                 if (item.items) {
+                  // Collapsible menu with sub-items
                   return (
-                    <Collapsible key={item.title} asChild defaultOpen>
+                    <Collapsible key={item.title} className="group/collapsible">
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton>
-                            <item.icon />
+                            <Icon className="h-4 w-4" />
                             <span>{item.title}</span>
-                            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                            <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <SidebarMenuSub>
-                            {item.items.map((subItem) => (
-                              <SidebarMenuSubItem key={subItem.title}>
-                                <SidebarMenuSubButton
-                                  asChild
-                                  isActive={pathname === subItem.url}
-                                >
-                                  <Link href={subItem.url}>
-                                    <subItem.icon />
-                                    <span>{subItem.title}</span>
-                                  </Link>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            ))}
+                            {item.items.map((subItem) => {
+                              const SubIcon = subItem.icon;
+                              return (
+                                <SidebarMenuSubItem key={subItem.title}>
+                                  <SidebarMenuSubButton asChild>
+                                    <Link href={subItem.url}>
+                                      <SubIcon className="h-4 w-4" />
+                                      <span>{subItem.title}</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              );
+                            })}
                           </SidebarMenuSub>
                         </CollapsibleContent>
                       </SidebarMenuItem>
@@ -153,11 +189,12 @@ export function AppSidebar({ user }: { user: SessionPayload }) {
                   );
                 }
 
+                // Regular menu item
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={pathname === item.url}>
-                      <Link href={item.url}>
-                        <item.icon />
+                    <SidebarMenuButton asChild>
+                      <Link href={item.url!}>
+                        <Icon className="h-4 w-4" />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
@@ -172,17 +209,42 @@ export function AppSidebar({ user }: { user: SessionPayload }) {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-muted">
-                {user.email.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex flex-col gap-0.5 leading-none">
-                <span className="font-medium text-sm">{user.email}</span>
-                <span className="text-xs text-muted-foreground capitalize">
-                  {user.role}
-                </span>
-              </div>
-            </SidebarMenuButton>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton size="lg">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-muted">
+                    {user?.email ? user.email.charAt(0).toUpperCase() : 'A'}
+                  </div>
+                  <div className="flex flex-col gap-0.5 leading-none">
+                    <span className="font-medium text-sm">
+                      {user?.email || 'Admin'}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Administrator
+                    </span>
+                  </div>
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="text-red-600 focus:text-red-600 cursor-pointer"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  {loggingOut ? 'Logging out...' : 'Logout'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

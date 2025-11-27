@@ -31,9 +31,9 @@ export interface Training {
   speakerId: string;
   speakerName: string;
   coverImage?: string;
-  pricingOptions: PricingOption[];
   regularPrice: number;
   discountPrice?: number;
+  pricingOptions?: string[];
   webinarId?: string;
   whoShouldAttend?: string;
   overview?: string;
@@ -44,6 +44,7 @@ export interface Training {
   views: number;
   seo?: TrainingSEO;
   relatedTrainings?: string[];
+  
 }
 
 export interface TrainingFormData {

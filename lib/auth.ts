@@ -27,12 +27,13 @@ export async function createSession(payload: {
   email: string;
   role: string;
 }): Promise<string> {
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  // Session expires in 1 hour
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
   const session = await new SignJWT({ ...payload })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('7d')
+    .setExpirationTime('1h') // 1 hour expiration
     .sign(secret);
 
   const cookieStore = await cookies();
@@ -55,11 +56,17 @@ export async function verifySession(
       algorithms: ['HS256'],
     });
 
+    // Check if session is expired
+    const expiresAt = new Date((payload.exp as number) * 1000);
+    if (expiresAt < new Date()) {
+      return null; // Session expired
+    }
+
     return {
       userId: payload.userId as string,
       email: payload.email as string,
       role: payload.role as string,
-      expiresAt: new Date((payload.exp as number) * 1000),
+      expiresAt: expiresAt,
     };
   } catch (error) {
     console.error('Failed to verify session:', error);
